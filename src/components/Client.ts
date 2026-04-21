@@ -1,9 +1,9 @@
-import { IApi, IOrder, IOrderResult, IProduct, IProductList } from "../types";
+import { IApi, IOrderData, IOrderResponse, IProduct, IProductResponse } from "../types";
 
 
 export interface IApiClient {
     getProducts(): Promise<IProduct[]>;
-    postOrder(order: IOrder): Promise<IOrderResult>;
+    postOrder(order: IOrderData): Promise<IOrderResponse>;
 }
 
 /**
@@ -25,7 +25,7 @@ export class ApiClient implements IApiClient{
      * @returns Список продкутов
      */
     async getProducts(): Promise<IProduct[]> {
-        const result = await this.api.get<IProductList>("/product/");
+        const result = await this.api.get<IProductResponse>("/product/");
         return result.items;
     }
 
@@ -34,7 +34,7 @@ export class ApiClient implements IApiClient{
      * @param order Запрос
      * @returns Результат
      */
-    async postOrder(order: IOrder): Promise<IOrderResult> {
-        return await this.api.post<IOrderResult>("/order", order);
+    async postOrder(order: IOrderData): Promise<IOrderResponse> {
+        return await this.api.post<IOrderResponse>("/order", order);
     }
     }

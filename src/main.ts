@@ -1,115 +1,68 @@
-import './scss/styles.scss';
-
-// Импортируем классы моделей
-import { ProductCatalog } from "./components/base/Models/ProductCatalog";
-import { Customer } from "./components/base/Models/Customer";
-import { Cart } from "./components/base/Models/Cart";
-
-// Импорт класса для работы с API
+import "./scss/styles.scss";
+import { API_URL, CDN_URL } from "./utils/constants";
+import { cloneTemplate, ensureElement } from "./utils/utils";
 import { Api } from "./components/base/Api";
-// Импортируем константу с URL API
-import { API_URL } from "./utils/constants";
-// Импорт слоя коммуникации для взаимодействия с API
-import { CommunicationLayer } from "./components/base/Communication/communicationLayer";
+import { EventEmitter } from "./components/base/Events";
+import { ApiClient } from "./components/Client";
+import { Cart } from "./components/Models/Cart";
+import { Catalog } from "./components/Models/Catalog";
+import { Gallery } from "./components/Views/Gallery";
+import { Header } from "./components/Views/Header";
+import { Modal } from "./components/Views/Modal";
+import { Buyer } from "./components/Models/Buyer";
+import { Presenter } from "./components/Presenter";
+import { Basket } from "./components/Views/Basket";
+import { Order } from "./components/Views/Order";
+import { Contacts } from "./components/Views/Contacts";
+import { Success } from "./components/Views/Success";
+import { CardPreview } from "./components/Views/Card/CardPreview";
+import { CardCatalog } from "./components/Views/Card/CardCatalog";
+import { CardBasket } from "./components/Views/Card/CardBasket";
 
-// Импорт данных товаров
-import { apiProducts } from "./utils/data";
+const api = new Api(API_URL);
 
+const client: ApiClient = new ApiClient(api);
 
-// Создаем экземпляр модели каталога
-const productsModel = new ProductCatalog();
+const events = new EventEmitter();
 
-// Устанавливаем список всех товаров из полученных данных
-productsModel.setAllProducts(apiProducts.items);
+const catalog = new Catalog(events);
 
-console.log("--- ProductCatalog ---");
+const cart = new Cart(events);
 
-console.log("Массив товаров из каталога:", productsModel.getAllProducts());
+const gallery = new Gallery(ensureElement(".gallery"));
 
-const firstProduct = apiProducts.items[0];
+const modal = new Modal(ensureElement("#modal-container"), events);
 
-if (firstProduct) {
-  // Устанавливаем выбранный продукт, используя первый товар из списка
-    productsModel.selectProduct(firstProduct);
-} else {
-    console.log("Список товаров пуст, невозможно выбрать продукт.");
-}
+const header = new Header(ensureElement(".header"), events);
 
-console.log("Выбранный товар (после установки):", productsModel.getSelectedProduct(),);
+const buyer = new Buyer(events);
 
+const basket = new Basket(cloneTemplate("#basket"), events);
 
-// Создаем экземпляр модели клиента
-const customer = new Customer();
+const order = new Order(cloneTemplate("#order"), events);
 
-// Данные клиента
-const customerData = {
-    email: "test@domain.com",
-    phone: "+7(999)123-45-67",
-    address: "Калининград, ул. Александра Невского, д. 1",
-    payment: undefined,
-};
+const contacts = new Contacts(cloneTemplate("#contacts"), events);
 
-// Сохраняем данные клиента в модель
-customer.saveData(customerData);
+const success = new Success(cloneTemplate("#success"), events);
 
-console.log("--- Customer ---");
+const cardPreview = new CardPreview(cloneTemplate("#card-preview"), CDN_URL, events)
 
-console.log("Данные клиента:", customer.getAllData());
-console.log("Валидность данных:", customer.validateData());
+const presenter = new Presenter(
+  catalog,
+  cart,
+  events,
+  client,
+  gallery,
+  modal,
+  header,
+  buyer,
+  basket,
+  order,
+  contacts,
+  success,
+  cardPreview,
+  CardCatalog,
+  CardBasket,
+);
 
-// Вызов очистки данных клиента
-customer.clearCustomerData();
-
-// Вывод после очистки данных
-console.log("Данные клиента после очистки:", customer.getAllData());
-
-// Создаем экземпляр корзины
-const cart = new Cart();
-
-// Добавляет первый товар из каталога в корзину
-cart.addItem(productsModel.getAllProducts()[0]);
-
-console.log("--- Cart ---");
-
-// Выводит текущие товары и их количество
-console.log("Товары в корзине:", cart.getItems());
-console.log("Количество товаров:", cart.getItemCount());
-console.log("Общая стоимость:", cart.getTotalPrice());
-
-// Удаляет товар по ID и снова выводит содержимое корзины
-const firstProductId = productsModel.getAllProducts()[0].id;
-cart.removeItem(firstProductId);
-console.log(`После удаления товара с id ${firstProductId}:`);
-console.log("Товары в корзине:", cart.getItems());
-console.log("Количество товаров:", cart.getItemCount());
-
-// Очищает корзину и выводит содержимое и количество после очистки
-cart.clearCart();
-console.log("После очистки корзины:");
-console.log("Товары в корзине:", cart.getItems());
-console.log("Количество товаров:", cart.getItemCount());
-
-
-// Создаем экземпляр API с указанным URL
-const apiInstance = new Api(API_URL);
-
-// Создаем слой коммуникации, передавая ему объект API
-const comms = new CommunicationLayer(apiInstance);
-
-console.log("--- CommunicationLayer ---");
-
-(async () => {
-    try {
-        // Выполняем асинхронный запрос на получение товаров
-        const productsResponse = await comms.fetchProducts();
-        const products = productsResponse.items;
-
-        // Создаем новый каталог и заполняем его полученными товарами
-        const productsModel = new ProductCatalog();
-        productsModel.setAllProducts(products);
-
-        console.log("Модель каталога:", productsModel.getAllProducts());
-    } catch (error) {
-        console.error("Ошибка при получении товаров:", error);
-    }
-})();
+presenter.start();

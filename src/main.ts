@@ -4,12 +4,12 @@ import { cloneTemplate, ensureElement } from "./utils/utils";
 import { Api } from "./components/base/Api";
 import { createEventEmitter } from "./components/base/Events";
 import { ApiClient } from "./components/Client";
-import { Cart } from "./components/Models/Cart";
-import { Catalog } from "./components/Models/Catalog";
+import { createCart } from "./components/Models/Cart";
+import { createCatalog } from "./components/Models/Catalog";
 import { createGallery } from "./components/Views/Gallery";
 import { createHeader } from "./components/Views/Header";
 import { createModal } from "./components/Views/Modal";
-import { Buyer } from "./components/Models/Buyer";
+import { createBuyer } from "./components/Models/Buyer";
 import { createPresenter } from "./components/Presenter";
 import { createBasket } from "./components/Views/Basket";
 import { createOrder } from "./components/Views/Order";
@@ -23,9 +23,9 @@ const client: ApiClient = new ApiClient(api);
 
 const events = createEventEmitter();
 
-const catalog = new Catalog(events);
+const catalog = createCatalog(events);
 
-const cart = new Cart(events);
+const cart = createCart(events);
 
 const gallery = createGallery(ensureElement(".gallery"));
 
@@ -33,7 +33,7 @@ const modal = createModal(ensureElement("#modal-container"), events);
 
 const header = createHeader(ensureElement(".header"), events);
 
-const buyer = new Buyer(events);
+const buyer = createBuyer(events);
 
 const basket = createBasket(cloneTemplate("#basket"), events);
 

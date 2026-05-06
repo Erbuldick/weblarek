@@ -4,101 +4,71 @@ import { IEvents } from "../base/Events";
 type TError = Partial<Record<keyof IBuyer, string>>;
 
 export interface IntBuyer {
-  validate(): TError;
-  getBuyer(): IBuyer;
-  setPayment(payment: TPayment): void;
-  setAddress(address: string): void;
-  setEmail(email: string): void;
-  setPhone(phone: string): void;
-  clear(): void;
+    validate(): TError;
+    getBuyer(): IBuyer;
+    setPayment(payment: TPayment): void;
+    setAddress(address: string): void;
+    setEmail(email: string): void;
+    setPhone(phone: string): void;
+    clear(): void;
 }
 
 /**
- * Класс покупатель
+ * Создаёт объект покупателя.
+ * @param events брокер событий
  */
-export class Buyer implements IntBuyer{
-  protected buyer: IBuyer;
-
-  /**
-   * Создает покупателя
-   */
-  constructor(protected events: IEvents) {
-    this.buyer = {
-      payment: "",
-      address: "",
-      email: "",
-      phone: "",
+export function createBuyer(events: IEvents): IntBuyer {
+    const buyer: IBuyer = {
+        payment: "",
+        address: "",
+        email: "",
+        phone: "",
     };
-  }
 
-  /**
-   * Производит проверку, возвращает объект, в котором ключом, является поле, а значением - проблемы с этим полем
-   * Если проблем нет, возвращается пустой объект
-   * @returns Найденные ошибки
-   */
-  public validate(): TError {
-    const result: TError = {};
-    if (this.buyer.payment.length === 0)
-      result["payment"] = "Не указан способ оплаты";
-    if (this.buyer.address.length === 0) result["address"] = "Не указан адрес";
-    if (this.buyer.email.length === 0)
-      result["email"] = "Не указан электронный адрес";
-    if (this.buyer.phone.length === 0) result["phone"] = "Не указан телефон";
-    return result;
-  }
+    return {
+        validate(): TError {
+            const result: TError = {};
+            if (buyer.payment.length === 0)
+                result["payment"] = "Не указан способ оплаты";
+            if (buyer.address.length === 0)
+                result["address"] = "Не указан адрес";
+            if (buyer.email.length === 0)
+                result["email"] = "Не указан электронный адрес";
+            if (buyer.phone.length === 0)
+                result["phone"] = "Не указан телефон";
+            return result;
+        },
 
-  /**
-   * Возвращает покупателя
-   * @returns Покупатель
-   */
-  public getBuyer(): IBuyer {
-    return this.buyer;
-  }
+        getBuyer(): IBuyer {
+            return buyer;
+        },
 
-  /**
-   * Устанавливает способ оплаты
-   * @param payment Способ оплаты online, cash
-   */
-  public setPayment(payment: TPayment) {
-    this.buyer.payment = payment;
-    this.events.emit("buyer:change");
-  }
+        setPayment(payment: TPayment) {
+            buyer.payment = payment;
+            events.emit("buyer:change");
+        },
 
-  /**
-   * Устанавливает адрес
-   * @param address Адрес
-   */
-  public setAddress(address: string) {
-    this.buyer.address = address;
-    this.events.emit("buyer:change");
-  }
+        setAddress(address: string) {
+            buyer.address = address;
+            events.emit("buyer:change");
+        },
 
-  /**
-   * Устанавливает email
-   * @param email email
-   */
-  public setEmail(email: string) {
-    this.buyer.email = email;
-    this.events.emit("buyer:change");
-  }
+        setEmail(email: string) {
+            buyer.email = email;
+            events.emit("buyer:change");
+        },
 
-  /**
-   * Устанавливает телефон
-   * @param phone Телефон
-   */
-  public setPhone(phone: string) {
-    this.buyer.phone = phone;
-    this.events.emit("buyer:change");
-  }
+        setPhone(phone: string) {
+            buyer.phone = phone;
+            events.emit("buyer:change");
+        },
 
-  /**
-   * Очищает аттрибуты покупателя
-   */
-  public clear() {
-    this.buyer.payment = "";
-    this.buyer.address = "";
-    this.buyer.email = "";
-    this.buyer.phone = "";
-    this.events.emit("buyer:change");
-  }
+        clear() {
+            buyer.payment = "";
+            buyer.address = "";
+            buyer.email = "";
+            buyer.phone = "";
+            events.emit("buyer:change");
+        }
+    };
 }

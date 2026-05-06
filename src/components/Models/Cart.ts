@@ -1,86 +1,53 @@
 import { IProduct } from "../../types";
 import { IEvents } from "../base/Events";
 
-
 export interface ICart {
-  addProduct(product: IProduct): void;
-  deleteProduct(product: IProduct): void;
-  count(): number;
-  getProducts(): IProduct[];
-  cost(): number;
-  isExist(id: string): boolean;
-  clear(): void;
+    addProduct(product: IProduct): void;
+    deleteProduct(product: IProduct): void;
+    count(): number;
+    getProducts(): IProduct[];
+    cost(): number;
+    isExist(id: string): boolean;
+    clear(): void;
 }
 
 /**
- * Корзина покупателя
+ * Создаёт корзину покупателя.
+ * @param events брокер событий
  */
-export class Cart implements ICart {
-  protected products: IProduct[];
+export function createCart(events: IEvents): ICart {
+    let products: IProduct[] = [];
 
-  /**
-   * Создание корзины
-   */
-  constructor(protected events: IEvents) {
-    this.products = [];
-  }
+    return {
+        addProduct(product: IProduct) {
+            products.push(product);
+            events.emit("basket:change");
+        },
 
-  /**
-   * Добавляет продукт в корзину
-   * @param product Продукт
-   */
-  public addProduct(product: IProduct) {
-    this.products.push(product);
-    this.events.emit("basket:change");
-  }
+        deleteProduct(product: IProduct) {
+            products = products.filter((val) => val.id !== product.id);
+            events.emit("basket:change");
+        },
 
-  /**
-   * Удаляет продукт из корзины
-   * @param product Продукт
-   */
-  public deleteProduct(product: IProduct) {
-    this.products = this.products.filter((val) => val.id !== product.id);
-    this.events.emit("basket:change");
-  }
+        count(): number {
+            return products.length;
+        },
 
-  /**
-   * Возвращает количество продуктов
-   * @returns Количество
-   */
-  public count(): number {
-    return this.products.length;
-  }
+        getProducts(): IProduct[] {
+            return products;
+        },
 
-  /**
-   * Возвращает список продуктов в корзине
-   * @returns Список продуктов
-   */
-  public getProducts(): IProduct[] {
-    return this.products;
-  }
+        cost(): number {
+            return products.reduce((acc, val) => acc + (val.price ?? 0), 0);
+        },
 
-  /**
-   * Возвращает стоимость продуктов в корзине
-   * @returns Стоимость
-   */
-  public cost(): number {
-    return this.products.reduce((acc, val) => acc + (val.price ?? 0), 0);
-  }
+        isExist(id: string): boolean {
+            return products.some((val) => val.id === id);
+        },
 
-  /**
-   * Проверят наличие продукта в корзине по его идентификатору
-   * @param id Идентификатор продукта
-   * @returns Признак наличия
-   */
-  public isExist(id: string): boolean {
-    return this.products.some((val) => val.id === id);
-  }
-
-  /**
-   * Очистка корзины
-   */
-  public clear() {
-    this.products = [];
-    this.events.emit("basket:change");
-  }
+        clear() {
+            products = [];
+            events.emit("basket:change");
+        }
+    };
 }

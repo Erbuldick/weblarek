@@ -1,26 +1,41 @@
+export interface IComponent<T> {
+    render(data?: Partial<T>): HTMLElement;
+    setImage(element: HTMLImageElement, src: string, alt?: string): void;
+    // container доступен через свойство, если нужно снаружи, но мы его не экспортируем напрямую
+}
+
 /**
- * Базовый компонент
+ * Фабрика для создания компонента на основе контейнера.
+ * Возвращает объект с методами render и setImage.
+ * Контейнер хранится в замыкании и может быть передан через свойство при необходимости.
  */
-export abstract class Component<T> {
-    protected constructor(protected readonly container: HTMLElement) {
-        // Учитывайте что код в конструкторе исполняется ДО всех объявлений в дочернем классе
-    }
+export function createComponent<T>(container: HTMLElement): IComponent<T> {
+    // Этот объект будет мутироваться через Object.assign в render, поэтому он не чисто IComponent<T>,
+    // но для вызывающего кода это прозрачно.
+    const instance = {} as IComponent<T> & { container: HTMLElement };
 
-    // Инструментарий для работы с DOM в дочерних компонентах
+    // Прячем контейнер, но можем дать доступ через геттер, если нужно
+    Object.defineProperty(instance, 'container', {
+        value: container,
+        writable: false,
+        configurable: false
+    });
 
-    // Установить изображение с альтернативным текстом
-    protected setImage(element: HTMLImageElement, src: string, alt?: string) {
+    instance.setImage = (element: HTMLImageElement, src: string, alt?: string) => {
         if (element) {
             element.src = src;
             if (alt) {
                 element.alt = alt;
             }
         }
-    }
+    };
 
-    // Вернуть корневой DOM-элемент
-    render(data?: Partial<T>): HTMLElement {
-        Object.assign(this as object, data ?? {});
-        return this.container;
-    }
+    instance.render = function(data?: Partial<T>): HTMLElement {
+        if (data) {
+            Object.assign(this, data);
+        }
+        return container;
+    };
+
+    return instance;
 }

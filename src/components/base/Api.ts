@@ -10,7 +10,8 @@ export class Api {
             headers: {
                 'Content-Type': 'application/json',
                 ...(options.headers as object ?? {})
-            }
+            },
+            cache: 'no-cache'
         };
     }
 

@@ -1,39 +1,48 @@
 import { ensureElement } from "../../utils/utils";
-import { Component } from "../base/Component";
 import { IEvents } from "../base/Events";
+import { createComponent, IComponent } from "../base/Component";
 
 export interface IHeader {
     counter: number;
 }
 
+// Тип для компонента хедера
+export type HeaderComponent = IComponent<IHeader> & {
+    counter: number; // заглушка, чтобы TS не ругался; на самом деле сеттер.
+};
+
 /**
- * Заголовок страницы
+ * Создаёт компонент заголовка
  */
-export class Header extends Component<IHeader> {
-    protected counterElement: HTMLElement;
-    protected basketButton: HTMLButtonElement;
+export function createHeader(
+    container: HTMLElement,
+    events: IEvents
+): HeaderComponent {
+    const component = createComponent<IHeader>(container);
 
-    constructor(
-        container: HTMLElement,
-        protected events: IEvents,
-    ) {
-        super(container);
-
-        this.counterElement = ensureElement<HTMLElement>(
+    // Поиск внутренних элементов
+    const counterElement = ensureElement<HTMLElement>(
         ".header__basket-counter",
-        this.container,
-        );
-        this.basketButton = ensureElement<HTMLButtonElement>(
+        container
+    );
+    const basketButton = ensureElement<HTMLButtonElement>(
         ".header__basket",
-        this.container,
-        );
+        container
+    );
 
-        this.basketButton.addEventListener("click", () => {
-        this.events.emit("basket:open");
-        });
-    }
+    // Логика клика по корзине
+    basketButton.addEventListener("click", () => {
+        events.emit("basket:open");
+    });
 
-    set counter(value: number) {
-        this.counterElement.textContent = String(value);
-    }
+    // Определяем сеттер counter
+    Object.defineProperty(component, 'counter', {
+        set(value: number) {
+            counterElement.textContent = String(value);
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component as HeaderComponent;
 }

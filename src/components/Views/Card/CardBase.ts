@@ -1,29 +1,38 @@
 import { ensureElement } from "../../../utils/utils";
-import { Component } from "../../base/Component";
+import { createComponent, IComponent } from "../../base/Component";
 
+export type CardBaseComponent<T> = IComponent<T> & {
+    title: string;
+    price: number | null;
+};
 
-/**
- * Базовая карточка
- */
-export class CardBase<T> extends Component<T> {
-    protected titleElement: HTMLElement;
-    protected priceElement: HTMLElement;
+export function createCardBase<T>(container: HTMLElement): CardBaseComponent<T> {
+    const component = createComponent<T>(container);
 
-    constructor(container: HTMLElement) {
-        super(container);
-        this.titleElement = ensureElement<HTMLElement>(".card__title", this.container);
-        this.priceElement = ensureElement<HTMLElement>(".card__price", this.container);
-    }
+    const titleElement = ensureElement<HTMLElement>(".card__title", container);
+    const priceElement = ensureElement<HTMLElement>(".card__price", container);
 
-    set price(value: number | null) {
-        if (value) {
-        this.priceElement.textContent = `${value} синапсов`;
-        } else {
-        this.priceElement.textContent = "Бесценно";
-        }
-    }
+    // Сеттер title
+    Object.defineProperty(component, 'title', {
+        set(value: string) {
+            titleElement.textContent = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
 
-    set title(value: string) {
-        this.titleElement.textContent = value;
-    }
+    // Сеттер price
+    Object.defineProperty(component, 'price', {
+        set(value: number | null) {
+            if (value) {
+                priceElement.textContent = `${value} синапсов`;
+            } else {
+                priceElement.textContent = "Бесценно";
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component as CardBaseComponent<T>;
 }

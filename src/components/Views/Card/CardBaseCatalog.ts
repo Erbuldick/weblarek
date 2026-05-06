@@ -1,44 +1,48 @@
 import { categoryMap } from "../../../utils/constants";
 import { ensureElement } from "../../../utils/utils";
-import { CardBase } from "./CardBase";
+import { createCardBase, CardBaseComponent } from "./CardBase";
 
 type CategoryKey = keyof typeof categoryMap;
 
-/**
- * Базовая карточка с наименованием, ценой, категорией и изображением
- */
-export class CardBaseCatalog<T> extends CardBase<T> {
-    protected categotyElement: HTMLElement;
-    protected imageElement: HTMLImageElement;
+export type CardBaseCatalogComponent<T> = CardBaseComponent<T> & {
+    category: string;
+    image: string;
+};
 
-    constructor(
-        container: HTMLElement,
-        protected cdnUrl: string,
-    ) {
-        super(container);
-        this.categotyElement = ensureElement<HTMLElement>(
-        ".card__category",
-        this.container,
-        );
-        this.imageElement = ensureElement<HTMLImageElement>(
-        ".card__image",
-        this.container,
-        );
-    }
+export function createCardBaseCatalog<T>(
+    container: HTMLElement,
+    cdnUrl: string
+): CardBaseCatalogComponent<T> {
+    // Получаем базовый объект с title/price
+    const component = createCardBase<T>(container) as CardBaseCatalogComponent<T>;
 
-    set category(value: string) {
-        this.categotyElement.textContent = value;
+    const categotyElement = ensureElement<HTMLElement>(".card__category", container);
+    const imageElement = ensureElement<HTMLImageElement>(".card__image", container);
 
-        for (const key in categoryMap) {
-        this.categotyElement.classList.toggle(
-            categoryMap[key as CategoryKey],
-            key === value,
-        );
-        }
-    }
+    // Сеттер category
+    Object.defineProperty(component, 'category', {
+        set(value: string) {
+            categotyElement.textContent = value;
+            for (const key in categoryMap) {
+                categotyElement.classList.toggle(
+                    categoryMap[key as CategoryKey],
+                    key === value
+                );
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
 
-    set image(value: string) {
-        const url = `${this.cdnUrl}${value}`;
-        this.setImage(this.imageElement, url);
-    }
+    // Сеттер image – используем setImage из базового компонента
+    Object.defineProperty(component, 'image', {
+        set(value: string) {
+            const url = `${cdnUrl}${value}`;
+            component.setImage(imageElement, url);
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component;
 }

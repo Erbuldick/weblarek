@@ -1,19 +1,24 @@
-import { Component } from "../base/Component";
+import { createComponent, IComponent } from "../base/Component";
 
 export interface IGallery {
     catalog: HTMLElement[];
 }
 
-/**
- * Каталог продуктов
- */
-export class Gallery extends Component<IGallery> {
+// Расширенный тип, описывающий наш компонент
+export type GalleryComponent = IComponent<IGallery> & {
+    catalog: undefined; // для TypeScript – сеттер объявим через дескриптор
+};
 
-    constructor(container: HTMLElement) {
-        super(container);
-    }
+export function createGallery(container: HTMLElement): GalleryComponent {
+    const component = createComponent<IGallery>(container);
 
-    set catalog(value: HTMLElement[]) {
-        this.container.append(...value);
-    }
+    Object.defineProperty(component, 'catalog', {
+        set(value: HTMLElement[]) {
+            container.append(...value);
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component as GalleryComponent;
 }

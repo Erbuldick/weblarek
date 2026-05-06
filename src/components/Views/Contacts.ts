@@ -1,50 +1,54 @@
 import { IBuyer } from "../../types";
 import { ensureElement } from "../../utils/utils";
 import { IEvents } from "../base/Events";
-import { Form } from "./Form";
+import { createForm, FormComponent } from "./Form";
 
 export type IContacts = Pick<IBuyer, "email" | "phone"> & {
     enable: boolean;
     error: object;
 };
 
-/**
- * Ввод контактов покупателя
- */
-export class Contacts extends Form<IContacts> {
-    protected emailElement: HTMLInputElement;
-    protected phoneElement: HTMLInputElement;
+export type ContactsComponent = FormComponent<IContacts> & {
+    email: string;
+    phone: string;
+};
 
+export function createContacts(
+    container: HTMLElement,
+    events: IEvents
+): ContactsComponent {
+    const component = createForm<IContacts>(container) as ContactsComponent;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-        this.emailElement = ensureElement<HTMLInputElement>(
-        '[name="email"]',
-        this.container,
-        );
-        this.phoneElement = ensureElement<HTMLInputElement>(
-        '[name="phone"]',
-        this.container,
-        );
-        this.emailElement.addEventListener("input", () => {
-            this.events.emit("buyer:set", {email: this.emailElement.value});
-        })
-        this.phoneElement.addEventListener("input", () => {
-            this.events.emit("buyer:set", {phone: this.phoneElement.value});
-        })
-        this.container.addEventListener("submit", (event: SubmitEvent) => {
-            event.preventDefault();
-            this.events.emit("contacts:close");
-        })
+    const emailElement = ensureElement<HTMLInputElement>('[name="email"]', container);
+    const phoneElement = ensureElement<HTMLInputElement>('[name="phone"]', container);
 
-    }
+    emailElement.addEventListener("input", () => {
+        events.emit("buyer:set", { email: emailElement.value });
+    });
+    phoneElement.addEventListener("input", () => {
+        events.emit("buyer:set", { phone: phoneElement.value });
+    });
 
-    set email(value: string) {
-        this.emailElement.value = value;
-    }
+    container.addEventListener("submit", (event: SubmitEvent) => {
+        event.preventDefault();
+        events.emit("contacts:close");
+    });
 
-    set phone(value: string) {
-        this.phoneElement.value = value;
-    }
+    Object.defineProperty(component, 'email', {
+        set(value: string) {
+            emailElement.value = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
 
+    Object.defineProperty(component, 'phone', {
+        set(value: string) {
+            phoneElement.value = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component;
 }

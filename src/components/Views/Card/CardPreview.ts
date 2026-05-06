@@ -1,48 +1,56 @@
 import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
 import { IEvents } from "../../base/Events";
-import { CardBaseCatalog } from "./CardBaseCatalog";
+import { createCardBaseCatalog, CardBaseCatalogComponent } from "./CardBaseCatalog";
 
 export type ICardPreview = Pick<
     IProduct,
     "category" | "title" | "image" | "price" | "description"
 > & { enable: boolean; text: string };
 
-/**
- * Preview карточки
- */
-export class CardPreview extends CardBaseCatalog<ICardPreview> {
-    protected descriptionElement: HTMLElement;
-    protected buttonElement: HTMLButtonElement;
+export type CardPreviewComponent = CardBaseCatalogComponent<ICardPreview> & {
+    description: string;
+    enable: boolean;
+    text: string;
+};
 
-    constructor(
-        container: HTMLElement,
-        cdnUrl: string,
-    protected evenets: IEvents,
-    ) {
-        super(container, cdnUrl);
-        this.descriptionElement = ensureElement<HTMLElement>(
-        ".card__text",
-        this.container,
-        );
-        this.buttonElement = ensureElement<HTMLButtonElement>(
-        ".card__button",
-        this.container,
-        );
-        this.buttonElement.addEventListener("click", () => {
-        this.evenets.emit("preview:button");
-        })
-    }
+export function createCardPreview(
+    container: HTMLElement,
+    cdnUrl: string,
+    events: IEvents
+): CardPreviewComponent {
+    const component = createCardBaseCatalog<ICardPreview>(container, cdnUrl) as CardPreviewComponent;
 
-    set description(value: string) {
-        this.descriptionElement.textContent = value;
-    }
+    const descriptionElement = ensureElement<HTMLElement>(".card__text", container);
+    const buttonElement = ensureElement<HTMLButtonElement>(".card__button", container);
 
-    set enable(value: boolean) {
-        this.buttonElement.disabled = !value;
-    }
+    buttonElement.addEventListener("click", () => {
+        events.emit("preview:button");
+    });
 
-    set text(value: string) {
-        this.buttonElement.textContent = value;
-    }
-    }
+    Object.defineProperty(component, 'description', {
+        set(value: string) {
+            descriptionElement.textContent = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    Object.defineProperty(component, 'enable', {
+        set(value: boolean) {
+            buttonElement.disabled = !value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    Object.defineProperty(component, 'text', {
+        set(value: string) {
+            buttonElement.textContent = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component;
+}

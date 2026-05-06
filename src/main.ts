@@ -2,67 +2,51 @@ import "./scss/styles.scss";
 import { API_URL, CDN_URL } from "./utils/constants";
 import { cloneTemplate, ensureElement } from "./utils/utils";
 import { Api } from "./components/base/Api";
-import { EventEmitter } from "./components/base/Events";
+import { createEventEmitter } from "./components/base/Events";
 import { ApiClient } from "./components/Client";
 import { Cart } from "./components/Models/Cart";
 import { Catalog } from "./components/Models/Catalog";
-import { Gallery } from "./components/Views/Gallery";
-import { Header } from "./components/Views/Header";
-import { Modal } from "./components/Views/Modal";
+import { createGallery } from "./components/Views/Gallery";
+import { createHeader } from "./components/Views/Header";
+import { createModal } from "./components/Views/Modal";
 import { Buyer } from "./components/Models/Buyer";
-import { Presenter } from "./components/Presenter";
-import { Basket } from "./components/Views/Basket";
-import { Order } from "./components/Views/Order";
-import { Contacts } from "./components/Views/Contacts";
-import { Success } from "./components/Views/Success";
-import { CardPreview } from "./components/Views/Card/CardPreview";
-import { CardCatalog } from "./components/Views/Card/CardCatalog";
-import { CardBasket } from "./components/Views/Card/CardBasket";
+import { createPresenter } from "./components/Presenter";
+import { createBasket } from "./components/Views/Basket";
+import { createOrder } from "./components/Views/Order";
+import { createContacts } from "./components/Views/Contacts";
+import { createSuccess } from "./components/Views/Success";
+import { createCardPreview } from "./components/Views/Card/CardPreview";
 
 const api = new Api(API_URL);
 
 const client: ApiClient = new ApiClient(api);
 
-const events = new EventEmitter();
+const events = createEventEmitter();
 
 const catalog = new Catalog(events);
 
 const cart = new Cart(events);
 
-const gallery = new Gallery(ensureElement(".gallery"));
+const gallery = createGallery(ensureElement(".gallery"));
 
-const modal = new Modal(ensureElement("#modal-container"), events);
+const modal = createModal(ensureElement("#modal-container"), events);
 
-const header = new Header(ensureElement(".header"), events);
+const header = createHeader(ensureElement(".header"), events);
 
 const buyer = new Buyer(events);
 
-const basket = new Basket(cloneTemplate("#basket"), events);
+const basket = createBasket(cloneTemplate("#basket"), events);
 
-const order = new Order(cloneTemplate("#order"), events);
+const order = createOrder(cloneTemplate("#order"), events);
 
-const contacts = new Contacts(cloneTemplate("#contacts"), events);
+const contacts = createContacts(cloneTemplate("#contacts"), events);
 
-const success = new Success(cloneTemplate("#success"), events);
+const success = createSuccess(cloneTemplate("#success"), events);
 
-const cardPreview = new CardPreview(cloneTemplate("#card-preview"), CDN_URL, events)
+const cardPreview = createCardPreview(cloneTemplate("#card-preview"), CDN_URL, events)
 
-const presenter = new Presenter(
-  catalog,
-  cart,
-  events,
-  client,
-  gallery,
-  modal,
-  header,
-  buyer,
-  basket,
-  order,
-  contacts,
-  success,
-  cardPreview,
-  CardCatalog,
-  CardBasket,
+const presenter = createPresenter(
+  catalog, cart, events, client, gallery, modal, header, buyer,
+  basket, order, contacts, success, cardPreview
 );
-
 presenter.start();

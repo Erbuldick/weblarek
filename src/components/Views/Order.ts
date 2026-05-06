@@ -1,61 +1,65 @@
 import { IBuyer, TPayment } from "../../types";
 import { ensureElement } from "../../utils/utils";
 import { IEvents } from "../base/Events";
-import { Form } from "./Form";
+import { createForm, FormComponent } from "./Form";
 
 export type IOrder = Pick<IBuyer, "payment" | "address"> & {
     enable: boolean;
     error: object;
 };
 
-/**
- * Ввод информации о заказе, способ оплаты и адрес доставки
- */
-export class Order extends Form<IOrder> {
-    protected cardElement: HTMLButtonElement;
-    protected cashElement: HTMLButtonElement;
-    protected addressElement: HTMLInputElement;
+export type OrderComponent = FormComponent<IOrder> & {
+    payment: TPayment;
+    address: string;
+};
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
+export function createOrder(
+    container: HTMLElement,
+    events: IEvents
+): OrderComponent {
+    const component = createForm<IOrder>(container) as OrderComponent;
 
-        this.cardElement = ensureElement<HTMLButtonElement>(
-        '[name="card"]',
-        this.container,
-        );
-        this.cashElement = ensureElement<HTMLButtonElement>(
-        '[name="cash"]',
-        this.container,
-        );
-        this.addressElement = ensureElement<HTMLInputElement>(
-        '[name="address"]',
-        this.container,
-        );
+    const cardElement = ensureElement<HTMLButtonElement>('[name="card"]', container);
+    const cashElement = ensureElement<HTMLButtonElement>('[name="cash"]', container);
+    const addressElement = ensureElement<HTMLInputElement>('[name="address"]', container);
 
-        this.cardElement.addEventListener("click", () => {
-        this.events.emit("buyer:set", { payment: "online" });
-        });
+    // Обработчики выбора оплаты
+    cardElement.addEventListener("click", () => {
+        events.emit("buyer:set", { payment: "online" });
+    });
+    cashElement.addEventListener("click", () => {
+        events.emit("buyer:set", { payment: "cash" });
+    });
 
-        this.cashElement.addEventListener("click", () => {
-        this.events.emit("buyer:set", { payment: "cash" });
-        });
+    // Ввод адреса
+    addressElement.addEventListener("input", () => {
+        events.emit("buyer:set", { address: addressElement.value });
+    });
 
-        this.addressElement.addEventListener("input", () => {
-        this.events.emit("buyer:set", { address: this.addressElement.value });
-        });
-
-        this.container.addEventListener("submit", (event: SubmitEvent) => {
+    // Отправка формы → переход к контактам
+    container.addEventListener("submit", (event: SubmitEvent) => {
         event.preventDefault();
-        this.events.emit("order:close");
-        });
-    }
+        events.emit("order:close");
+    });
 
-    set payment(value: TPayment) {
-        this.cashElement.classList.toggle("button_alt-active", value === "cash");
-        this.cardElement.classList.toggle("button_alt-active", value === "online");
-    }
+    // Сеттер payment
+    Object.defineProperty(component, 'payment', {
+        set(value: TPayment) {
+            cashElement.classList.toggle("button_alt-active", value === "cash");
+            cardElement.classList.toggle("button_alt-active", value === "online");
+        },
+        enumerable: true,
+        configurable: true
+    });
 
-    set address(value: string) {
-        this.addressElement.value = value;
-    }
+    // Сеттер address
+    Object.defineProperty(component, 'address', {
+        set(value: string) {
+            addressElement.value = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+
+    return component;
 }

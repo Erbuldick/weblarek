@@ -227,7 +227,7 @@ export function createPresenter(
             client
                 .getProducts()
                 .then((data) => {
-                    catalog.setProcucts(data);
+                    catalog.setProducts(data);
                     cart.clear();
                     buyer.clear();
                 })

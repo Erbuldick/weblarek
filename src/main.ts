@@ -275,10 +275,12 @@ events.on('modal:close', () => page.locked = false);
     } catch (err) {
         console.warn('Используем моковые данные');
         const { apiProducts } = await import('./utils/data');
-        const fixedProducts = apiProducts.items.map(product => ({
-            ...product,
-            image: `/src/images/${product.image.replace(/^\//, '')}`
+        const fixedProducts = await Promise.all(apiProducts.items.map(async (product) => {
+            const imageName = product.image.replace(/^\//, '');
+            const imageUrl = new URL(`../images/${imageName}`, import.meta.url).href;
+            return { ...product, image: imageUrl };
         }));
+        
         productsModel.setAllProducts(fixedProducts);
         renderCatalog();
     }

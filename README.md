@@ -124,189 +124,57 @@ interface IBuyer {
 
 ### Модели данных
 
-#### Класс Catalog (каталог товаров)
-Поля:
+#### Класс ProductCatalog (каталог товаров)
 
-protected products: IProduct[]
-protected selected: IProduct | null
+Хранение товаров, которые можно купить в приложении.
 
-Методы:
+Основные атрибуты:
+`allProducts: IProduct[]` - массив всех товаров в каталоге.
+`selectedProduct: IProduct | null` - объект выбранного в данный момент товара или null, если товар не выбран.
 
-setProcucts(products: IProduct[]): void
-getProducts(): IProduct[]
-getProduct(id: string): IProduct | undefined
-setSelected(product: IProduct | null): void
-getSelected(): IProduct | null
+Методы класса:
+`getAllProducts(): IProduct[]` - возвращает список всех товаров.
+`saveProduct(product: IProduct): void` - сохраняет (добавляет или обновляет) информацию о товаре.
+`getSelectedProduct(): IProduct | null` - получает информацию о выбранной карточке товара.
+`setAllProducts(products: IProduct[]): void` - сохраняет (полностью перезаписывает) массив данных товаров.
+`getProductById(id: string): IProduct | undefined` - получает один товар по его уникальному идентификатору (id). Возвращает undefined, если товар не найден.
 
 #### Класс Cart (корзина)
-Поля:
 
-protected products: IProduct[]
+Хранение товаров, которые пользователь выбрал для покупки.
 
-Методы:
+Основные атрибуты:
+`items: IProduct[]` - массив товаров, добавленных в корзину.
 
-addProduct(product: IProduct): void
-deleteProduct(product: IProduct): void
-count(): number
-getProducts(): IProduct[]
-cost(): number
-isExist(id: string): boolean
-clear(): void
+Методы класса:
+`getItems(): IProduct[]` - возвращает список товаров в корзине.
+`addItem(product: IProduct): void` - добавляет товар в корзину.
+`removeItem(productId: string): void` - удаляет товар из корзины по его id.
+`getItemCount(): number` - возвращает общее количество товаров в корзине.
+`getTotalPrice(): number` - возвращает общую стоимость всех товаров в корзине.
+`hasItem(productId: string): boolean` - проверяет, есть ли товар с указанным id в корзине.
+`clearCart(): void` - очищает корзину (удаляет все товары).
 
-#### Класс Buyer (покупатель)
-Поля:
+#### Класс Customer (покупатель)
 
-protected buyer: IBuyer
+Данные покупателя, которые тот должен указать при оформлении заказа.
 
-Методы:
+Основные атрибуты:
+`payment: TPayment` - способ оплаты, выбранный покупателем.
+`email: string` - электронная почта покупателя.
+`phone: string` - номер телефона покупателя.
+`address: string` - адрес доставки.
 
-validate(): Partial<Record<keyof IBuyer, string>>
-getBuyer(): IBuyer
-setPayment(payment: TPayment): void
-setAddress(address: string): void
-setEmail(email: string): void
-setPhone(phone: string): void
-clear(): void
+Методы класса:
+`validateData(): boolean` - проверяет корректность введенных данных покупателя.
+`saveData(buyerData: IBuyer): void` - сохраняет новые данные покупателя.
+`getAllData(): IBuyer` - получает все сохраненные данные покупателя.
+`clearCustomerData(): void` - очищает все данные, связанные с покупателем.
 
-### Представления
+## Слой коммуникации CommunicationLayer
 
-Все представления создаются фабричными функциями, которые принимают корневой контейнер и (опционально) EventEmitter. Возвращают объект с методами render и набором сеттеров, совместимых с Component<T>.
+Класс, который будет взаимодействовать с сервером через API. Он будет использовать методы get и post из интерфейса IApi.
 
-#### CardBase - Базовая карточка
-Сеттеры:
-
-title: string - заголовок
-price: number | null - цена (отображается «Бесценно» при null)
-
-#### CardBaseCatalog - карточка в каталоге (расширяет CardBase)
-Сеттеры:
-
-category: string - категория (меняет CSS-класс)
-image: string - URL изображения (дополняется CDN_URL) 
-
-#### CardBasket - карточка в корзине
-
-Сеттеры:
-
-index: number - порядковый номер
-
-Принимает actions: { onClick?: () => void } для кнопки удаления.
-
-#### CardCatalog - карточка каталога с кликом
-
-Принимает в конструкторе actions: { onClick?: () => void } и вешает обработчик на контейнер.
-
-#### CardPreview - детальный просмотр товара (расширяет CardBaseCatalog)
-
-Сеттеры:
-
-description: string - полное описание
-enable: boolean - доступность кнопки
-text: string - текст кнопки («В корзину» / «Удалить» / «Недоступно»)
-
-#### Basket - корзина (список товаров + итог)
-
-Сеттеры:
-
-cost: number - общая стоимость
-products: HTMLElement[] - массив DOM-элементов карточек
-enable: boolean - активность кнопки «Оформить»
-
-#### Form - базовая форма (общая логика)
-
-Сеттеры:
-
-enable: boolean - блокировка/разблокировка кнопки отправки
-error: object - отображение ошибок (значения объекта выводятся через 
-)
-
-#### Order - форма способа оплаты и адреса
-
-Сеттеры:
-
-payment: TPayment - подсвечивает выбранную кнопку
-address: string - значение поля ввода
-
-Генерирует событие order:close при сабмите.
-
-#### Contacts - форма контактов (email, телефон)
-
-Сеттеры:
-
-email: string
-phone: string
-
-Генерирует contacts:close при сабмите.
-
-#### Gallery - галерея (контейнер для карточек каталога)
-
-Сеттеры:
-
-catalog: HTMLElement[] - добавляет карточки в контейнер
-
-#### Header - шапка сайта
-
-Сеттеры:
-
-counter: number - количество товаров в корзине
-
-Генерирует basket:open при клике на иконку корзины.
-
-#### Modal - модальное окно
-
-Сеттеры:
-
-show: boolean - открыть/закрыть модалку (добавляет/удаляет класс modal_active, обрабатывает Escape)
-content: HTMLElement - заменяет содержимое модалки
-
-Генерирует modal:close при клике на крестик, оверлей или по Escape.
-
-#### Success - сообщение об успешном заказе
-
-Сеттеры:
-
-cost: number - отображает списанную сумму
-
-При клике на кнопку генерирует modal:close.
-
-#### Presenter
-
-Класс createPresenter (фабрика, возвращающая объект с методом start) связывает модели, представления и брокер событий. Все обработчики событий настраиваются внутри.
-
-Основные потоки:
-
-Загрузка каталога.
-
-client.getProducts() => catalog.setProducts() => отрисовка Gallery.
-
-Открытие карточки товара.
-
-Клик по карточке => catalog:select => catalog:selected => отображение CardPreview в модалке.
-
-Добавление/удаление из корзины.
-
-Кнопка в превью => preview:button => cart.addProduct/deleteProduct => обновление Header и Basket.
-
-Оформление заказа.
-
-Нажатие «Оформить» в корзине => order:open => отображается Order.
-Заполнение данных =>валидация через buyer.validate => активация кнопки.
-Переход к контактам => order:close => отображается Contacts.
-Отправка заказа => contacts:close => client.postOrder => показ Success.
-После успеха корзина и покупатель очищаются.
-
-#### Типы событий
-
-catalog:change
-catalog:select
-catalog:selected
-modal:close
-preview:button
-basket:open
-basket:change
-basket:remove
-order:open
-order:close
-buyer:set
-buyer:change
-contacts:close
+Методы класса:
+`fetchProducts()` - GET-запрос на /product/, возвращающий массив товаров.
+`sendOrder(orderData: IOrderData)` - POST-запрос на /order/, отправляющий заказ.

@@ -19,3 +19,4 @@ export const categoryMap = {
 export const settings = {
 
 };
+

@@ -5,30 +5,19 @@ export class Api {
     protected options: RequestInit;
 
     constructor(baseUrl: string, options: RequestInit = {}) {
-        if (!baseUrl) {
-            throw new Error('API baseUrl не задан. Проверьте переменные окружения (VITE_API_ORIGIN).');
-        }
         this.baseUrl = baseUrl;
         this.options = {
             headers: {
                 'Content-Type': 'application/json',
                 ...(options.headers as object ?? {})
-            },
-            cache: 'no-cache'
+            }
         };
     }
 
     protected handleResponse<T>(response: Response): Promise<T> {
-        if (response.ok) {
-            return response.json();
-        } else {
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json().then(data => Promise.reject(data.error ?? response.statusText));
-            } else {
-                return response.text().then(text => Promise.reject(text || response.statusText));
-            }
-        }
+        if (response.ok) return response.json();
+        else return response.json()
+            .then(data => Promise.reject(data.error ?? response.statusText));
     }
 
     get<T extends object>(uri: string) {

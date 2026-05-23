@@ -22,9 +22,6 @@ export interface IProduct {
     price: number | null;
 }
 
-// Тип для способа оплаты это выбор из нескольких вариантов строк.
-export type TPayment = "online" | "cash" | "";
-
 // Интерфейс для данных покупателя
 export interface IBuyer {
     payment: TPayment;
@@ -32,6 +29,9 @@ export interface IBuyer {
     phone: string;
     address: string;
 }
+
+// Тип для способа оплаты это выбор из нескольких вариантов строк.
+export type TPayment = "online" | "on_delivery" | "";
 
 // Интерфейс для ответа с списком товаров
 export interface IProductResponse {

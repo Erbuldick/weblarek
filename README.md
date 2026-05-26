@@ -102,7 +102,7 @@ Presenter - презентер содержит основную логику п
 
 ### Иитерфейсы данных
 
-#### товар IProduct
+#### IProduct
 
 interface IProduct {
   id: string;            - Уникальный идентификатор товара
@@ -113,7 +113,7 @@ interface IProduct {
   price: number | null;  - Цена товара (число или null, если цена не определена)
 }
 
-#### Покупатель IBuyer
+#### IBuyer
 
 interface IBuyer {
   payment: TPayment;     - Способ оплаты ('online' (онлайн) или 'on_delivery' (при получении), или undefined/ null, если  способ оплаты не выбран)
@@ -122,6 +122,30 @@ interface IBuyer {
   address: string;       - Адрес доставки
 }
 
+#### TPayment - объединение строк: "online" | "on_delivery" | "".
+
+#### IProductResponse - ответ сервера со списком товаров.  
+  total: number – общее количество.  
+  items: IProduct[] – массив товаров.
+
+#### IOrderData - данные заказа для отправки на сервер (расширяет IBuyer).  
+  items: string[] - массив id товаров.  
+  total: number - итоговая сумма.
+
+#### IOrderResponse - ответ сервера после оформления заказа.  
+  id: string – идентификатор заказа.  
+  total: number – итоговая сумма.
+
+#### ICardActions – действия для карточки товара.  
+  onClick: (event: MouseEvent) => void – обработчик клика.
+
+#### IBasketView –  данные для отображения корзины.  
+  items: HTMLElement[] – массив элементов списка.  
+  total: number – общая стоимость.
+
+#### ISuccess – данные для модального окна успеха.  
+  total: number – списанная сумма.
+
 ### Модели данных
 
 #### Класс ProductCatalog (каталог товаров)
@@ -129,52 +153,227 @@ interface IBuyer {
 Хранение товаров, которые можно купить в приложении.
 
 Основные атрибуты:
-`allProducts: IProduct[]` - массив всех товаров в каталоге.
-`selectedProduct: IProduct | null` - объект выбранного в данный момент товара или null, если товар не выбран.
+allProducts: IProduct[] - массив всех товаров в каталоге.
+selectedProduct: IProduct | null - объект выбранного в данный момент товара или null, если товар не выбран.
 
 Методы класса:
-`getAllProducts(): IProduct[]` - возвращает список всех товаров.
-`saveProduct(product: IProduct): void` - сохраняет (добавляет или обновляет) информацию о товаре.
-`getSelectedProduct(): IProduct | null` - получает информацию о выбранной карточке товара.
-`setAllProducts(products: IProduct[]): void` - сохраняет (полностью перезаписывает) массив данных товаров.
-`getProductById(id: string): IProduct | undefined` - получает один товар по его уникальному идентификатору (id). Возвращает undefined, если товар не найден.
+getAllProducts(): IProduct[] - возвращает список всех товаров.
+saveProduct(product: IProduct): void - сохраняет (добавляет или обновляет) информацию о товаре.
+getSelectedProduct(): IProduct | null - получает информацию о выбранной карточке товара.
+setAllProducts(products: IProduct[]): void - сохраняет (полностью перезаписывает) массив данных товаров.
+getProductById(id: string): IProduct | undefined - получает один товар по его уникальному идентификатору (id). Возвращает undefined, если товар не найден.
 
 #### Класс Cart (корзина)
 
 Хранение товаров, которые пользователь выбрал для покупки.
 
 Основные атрибуты:
-`items: IProduct[]` - массив товаров, добавленных в корзину.
+items: IProduct[] - массив товаров, добавленных в корзину.
 
 Методы класса:
-`getItems(): IProduct[]` - возвращает список товаров в корзине.
-`addItem(product: IProduct): void` - добавляет товар в корзину.
-`removeItem(productId: string): void` - удаляет товар из корзины по его id.
-`getItemCount(): number` - возвращает общее количество товаров в корзине.
-`getTotalPrice(): number` - возвращает общую стоимость всех товаров в корзине.
-`hasItem(productId: string): boolean` - проверяет, есть ли товар с указанным id в корзине.
-`clearCart(): void` - очищает корзину (удаляет все товары).
+getItems(): IProduct[] - возвращает список товаров в корзине.
+addItem(product: IProduct): void - добавляет товар в корзину.
+removeItem(productId: string): void - удаляет товар из корзины по его id.
+getItemCount(): number - возвращает общее количество товаров в корзине.
+getTotalPrice(): number - возвращает общую стоимость всех товаров в корзине.
+hasItem(productId: string): boolean - проверяет, есть ли товар с указанным id в корзине.
+clearCart(): void - очищает корзину (удаляет все товары).
 
 #### Класс Customer (покупатель)
 
 Данные покупателя, которые тот должен указать при оформлении заказа.
 
 Основные атрибуты:
-`payment: TPayment` - способ оплаты, выбранный покупателем.
-`email: string` - электронная почта покупателя.
-`phone: string` - номер телефона покупателя.
-`address: string` - адрес доставки.
+payment: TPayment - способ оплаты, выбранный покупателем.
+email: string - электронная почта покупателя.
+phone: string - номер телефона покупателя.
+address: string - адрес доставки.
 
 Методы класса:
-`validateData(): boolean` - проверяет корректность введенных данных покупателя.
-`saveData(buyerData: IBuyer): void` - сохраняет новые данные покупателя.
-`getAllData(): IBuyer` - получает все сохраненные данные покупателя.
-`clearCustomerData(): void` - очищает все данные, связанные с покупателем.
+validateData(): boolean - проверяет корректность введенных данных покупателя.
+saveData(buyerData: IBuyer): void - сохраняет новые данные покупателя.
+getAllData(): IBuyer - получает все сохраненные данные покупателя.
+clearCustomerData(): void - очищает все данные, связанные с покупателем.
 
 ## Слой коммуникации CommunicationLayer
 
 Класс, который будет взаимодействовать с сервером через API. Он будет использовать методы get и post из интерфейса IApi.
 
 Методы класса:
-`fetchProducts()` - GET-запрос на /product/, возвращающий массив товаров.
-`sendOrder(orderData: IOrderData)` - POST-запрос на /order/, отправляющий заказ.
+fetchProducts() - GET-запрос на /product/, возвращающий массив товаров.
+sendOrder(orderData: IOrderData) - POST-запрос на /order/, отправляющий заказ.
+
+## Компоненты представления (View)
+
+#### Класс Page
+Управляет основными элементами главной страницы: счётчиком корзины, галереей товаров и блокировкой прокрутки при открытом модальном окне.
+
+Конструктор:  
+constructor(container: HTMLElement, events: IEvents) – принимает корневой элемент страницы и брокер событий.
+
+Поля:
+_counter: HTMLElement – элемент счётчика корзины.  
+_gallery: HTMLElement – контейнер галереи.  
+_basketButton: HTMLElement – кнопка открытия корзины.
+
+Методы (сеттеры): 
+counter(value: number) – обновляет текст счётчика.  
+catalog(items: HTMLElement[]) – заменяет содержимое галереи.  
+locked(value: boolean) – добавляет/удаляет класс modal-open у body, блокируя прокрутку.
+
+#### Класс Modal
+Реализует модальное окно с возможностью закрытия по клику на оверлей или крестик.
+
+Конструктор: 
+constructor(container: HTMLElement, events: IEvents) – принимает корневой элемент модалки и брокер событий.
+
+Поля:
+_closeButton: HTMLButtonElement – кнопка закрытия.  
+_content: HTMLElement – контейнер для динамического содержимого.
+
+Методы: 
+open(): void – добавляет класс modal_active, генерирует событие modal:open.  
+close(): void – удаляет класс, очищает содержимое, генерирует modal:close.  
+render(data?: { content: HTMLElement }): HTMLElement – устанавливает содержимое, открывает модалку и возвращает её корневой элемент.  
+get isOpen(): boolean – возвращает true, если модалка открыта.
+
+#### Абстрактный класс Form<T>
+Базовый класс для всех форм (заказ, контакты). Расширяет Component<T>.
+
+Назначение: Общая логика валидации, отображения ошибок, обработки ввода и отправки формы.
+
+Конструктор:  
+constructor(container: HTMLFormElement, events: IEvents) – принимает элемент формы и брокер событий.
+
+Поля:  
+_submitButton: HTMLButtonElement – кнопка отправки.  
+_errors: HTMLElement – элемент для вывода сообщения об ошибке.
+
+Методы:  
+set valid(value: boolean) – блокирует/разблокирует кнопку отправки.  
+set errors(value: string) – устанавливает текст ошибки.  
+render(data?: Partial<T>): HTMLFormElement – применяет переданные данные к форме, возвращает форму.  
+onInputChange(field: keyof T, value: string) – генерирует событие form:change.
+
+#### Класс OrderForm
+Форма первого шага оформления заказа (способ оплаты и адрес).
+
+Назначение: Управление выбором способа оплаты и полем адреса, валидация.
+
+Конструктор: 
+constructor(container: HTMLFormElement, events: IEvents) – вызывает конструктор Form, инициализирует кнопки оплаты и поле адреса.
+
+Поля: 
+_cardButton: HTMLButtonElement – кнопка «Онлайн».  
+_cashButton: HTMLButtonElement – кнопка «При получении».  
+_addressInput: HTMLInputElement – поле ввода адреса.
+
+Сеттеры/геттеры: 
+payment: TPayment – устанавливает визуально активную кнопку оплаты.  
+address: string – читает/записывает адрес.
+
+Методы: 
+private setPayment(type: TPayment) – устанавливает payment и генерирует событие order:paymentChange.
+
+#### Класс ContactsForm
+Форма второго шага оформления (email и телефон).
+
+Конструктор:  
+constructor(container: HTMLFormElement, events: IEvents) – вызывает конструктор Form, инициализирует поля email и phone.
+
+Поля: 
+_emailInput: HTMLInputElement – поле email.  
+_phoneInput: HTMLInputElement – поле телефона.
+
+Геттеры/сеттеры:  
+email: string – читает/записывает email.  
+phone: string – читает/записывает телефон.
+
+#### Класс Card
+Отображает карточку товара в разных контекстах: в каталоге, в превью (модальное окно), в корзине.
+
+Назначение: Универсальный компонент для показа информации о товаре и обработки кликов.
+
+Конструктор:  
+constructor(container: HTMLElement, type: CardType, events: IEvents, actions?: ICardActions) – принимает DOM-элемент, тип карточки (catalog, preview, basket), брокер событий и опциональные действия.
+
+Поля (в зависимости от типа): 
+_title: HTMLElement – заголовок.  
+_price: HTMLElement – цена.  
+_image?: HTMLImageElement – изображение (для catalog/preview).  
+_category?: HTMLElement – категория (для catalog/preview).  
+_description?: HTMLElement – описание (для preview).  
+_button?: HTMLButtonElement – кнопка (для preview/basket).  
+_index?: HTMLElement – номер позиции в корзине (для basket).
+
+Сеттеры:  
+title(value: string) – устанавливает текст заголовка.  
+price(value: number | null) – форматирует цену (если null – «Бесценно»), при необходимости блокирует кнопку.  
+image(value: string) – устанавливает src изображения.  
+category(value: string) – устанавливает текст категории и CSS-класс в соответствии с картой категорий.  
+description(value: string) – устанавливает описание.  
+index(value: number) – устанавливает номер в корзине.  
+buttonText(value: string) – изменяет текст кнопки.
+
+#### Класс Basket
+Отображает корзину: список товаров, общую сумму и кнопку оформления.
+
+Назначение: Управление отображением содержимого корзины и кнопки оформления.
+
+Конструктор: 
+constructor(container: HTMLElement, events: IEvents) – принимает корневой элемент корзины и брокер событий.
+
+Поля:
+_list: HTMLElement – контейнер списка товаров (.basket__list).  
+_total: HTMLElement – элемент общей стоимости (.basket__price).  
+_button: HTMLButtonElement – кнопка «Оформить».
+
+Сеттеры:
+items(items: HTMLElement[]) – заполняет список; если массив пуст, выводит сообщение «Корзина пуста» и блокирует кнопку.  
+total(value: number) – устанавливает текст общей суммы.
+
+#### Класс Success
+Отображает модальное окно успешного оформления заказа.
+
+Назначение: Показать сообщение об успехе и сумму списания.
+
+Конструктор: 
+constructor(container: HTMLElement, events: IEvents) – принимает корневой элемент и брокер событий.
+
+Поля: 
+_closeButton: HTMLButtonElement – кнопка закрытия.  
+_description: HTMLElement – элемент с описанием списания.
+
+Сеттер:  
+total(value: number) – устанавливает текст вида «Списано X синапсов».
+
+## Утилиты и константы
+
+#### utils.ts
+Содержит вспомогательные функции:
+ensureElement<T>(selector, context?) – гарантированно возвращает DOM-элемент, выбрасывает ошибку, если элемент не найден.
+cloneTemplate<T>(query) – клонирует содержимое HTMLTemplateElement.
+createElement<T>(tagName, props, children) – фабрика для создания DOM-элементов.
+bem(...) – формирует BEM-имена классов.
+и другие.
+
+#### constants.ts
+Хранит конфигурационные и текстовые константы:
+API_URL, CDN_URL – адреса сервера.
+categoryMap – соответствие категорий CSS-модификаторам.
+TEXT – объект со всеми строковыми литералами, используемыми в интерфейсе (надписи на кнопках, сообщения ошибок, текст пустой корзины и т.д.). Это исключает «магические строки» в коде.
+
+### Точка входа – main.ts
+Роль презентера. Здесь происходит:
+создание экземпляров всех моделей (ProductCatalog, Cart, Customer), коммуникационного слоя (CommunicationLayer), компонентов представления (Page, Modal, ...).
+подписка на события через events.on, связывающая действия пользователя с методами моделей и обновлением представления.
+загрузка товаров с сервера (или из моков) и первичный рендер каталога.
+реализована валидация форм, переход между шагами оформления заказа, отправка заказа на сервер и показ сообщения об успехе.
+
+### UML-схема структуры классов
+В проекте не предусмотрена графическая UML-схема, однако описанная выше документация полностью отражает иерархию и связи классов. Ключевые связи:  
+Component<T> – базовый для всех классов представления (Page, Modal, Form, Card, Basket, Success).  
+Form<T> наследуется от Component и служит основой для OrderForm и ContactsForm.  
+Модели (ProductCatalog, Cart, Customer) не наследуются от Component и не зависят напрямую от представления.  
+Взаимодействие через EventEmitter обеспечивает слабую связанность.  
+CommunicationLayer использует композицию с Api.

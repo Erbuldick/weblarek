@@ -1,12 +1,8 @@
 import './scss/styles.scss';
-
-// Модели
 import { ProductCatalog } from './components/Models/ProductCatalog';
 import { Customer } from './components/Models/Customer';
 import { Cart } from './components/Models/Cart';
 import { CommunicationLayer } from './components/Communication/CommunicationLayer';
-
-// Компоненты представления
 import { Page } from './components/view/Page';
 import { Modal } from './components/common/Modal';
 import { Card } from './components/view/Card';
@@ -14,14 +10,12 @@ import { Basket } from './components/view/Basket';
 import { OrderForm } from './components/view/OrderForm';
 import { ContactsForm } from './components/view/ContactsForm';
 import { Success } from './components/common/Success';
-
-// Базовые классы и утилиты
 import { Api } from './components/base/Api';
 import { EventEmitter } from './components/base/Events';
-import { API_URL, CDN_URL } from './utils/constants';
+import { API_URL, CDN_URL, TEXT } from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils';
+import { TPayment } from './types';
 
-// Шаблоны
 const templates = {
     cardCatalog: ensureElement<HTMLTemplateElement>('#card-catalog'),
     cardPreview: ensureElement<HTMLTemplateElement>('#card-preview'),
@@ -32,24 +26,17 @@ const templates = {
     success: ensureElement<HTMLTemplateElement>('#success'),
 };
 
-// Событийная шина
 const events = new EventEmitter();
-
-// Модели
 const productsModel = new ProductCatalog();
 const cart = new Cart();
 const customer = new Customer();
 const api = new Api(API_URL);
 const comms = new CommunicationLayer(api);
-
-// UI компоненты
 const page = new Page(document.body, events);
 const modal = new Modal(ensureElement('#modal-container'), events);
 let currentBasketView: Basket | null = null;
 let currentOrderForm: OrderForm | null = null;
 let currentContactsForm: ContactsForm | null = null;
-
-// === Вспомогательные функции ===
 
 function updateCartCounter() {
     page.counter = cart.getItemCount();
@@ -63,7 +50,7 @@ function renderCatalog() {
         });
         card.title = product.title;
         card.price = product.price;
-        card.image = product.image;
+        card.image = CDN_URL + product.image;
         card.category = product.category;
         return cardElement;
     });
@@ -113,11 +100,11 @@ function showPreview(productId: string) {
     });
     card.title = product.title;
     card.price = product.price;
-    card.image = product.image;
+    card.image = CDN_URL + product.image;
     card.category = product.category;
     card.description = product.description;
-    card.buttonText = cart.hasItem(product.id) ? 'Удалить из корзины' : 'В корзину';
-    if (product.price === null) card.buttonText = 'Недоступно';
+    card.buttonText = cart.hasItem(product.id) ? TEXT.REMOVE_FROM_CART : TEXT.ADD_TO_CART;
+    if (product.price === null) card.buttonText = TEXT.UNAVAILABLE;
     modal.render({ content: cardElement });
 }
 
@@ -150,8 +137,6 @@ function showSuccess(total: number) {
     modal.render({ content: successElement });
 }
 
-// === Валидация форм ===
-
 function validateOrderForm() {
     if (!currentOrderForm) return;
     const data = customer.getAllData();
@@ -159,10 +144,10 @@ function validateOrderForm() {
     let errorMsg = '';
     if (!data.address) {
         isValid = false;
-        errorMsg = 'Введите адрес доставки';
+        errorMsg = TEXT.ERROR_ADDRESS_REQUIRED;
     } else if (!data.payment) {
         isValid = false;
-        errorMsg = 'Выберите способ оплаты';
+        errorMsg = TEXT.ERROR_PAYMENT_REQUIRED;
     }
     currentOrderForm.valid = isValid;
     currentOrderForm.errors = errorMsg;
@@ -175,16 +160,14 @@ function validateContactsForm() {
     let errorMsg = '';
     if (!data.email) {
         isValid = false;
-        errorMsg = 'Введите email';
+        errorMsg = TEXT.ERROR_EMAIL_REQUIRED;
     } else if (!data.phone) {
         isValid = false;
-        errorMsg = 'Введите телефон';
+        errorMsg = TEXT.ERROR_PHONE_REQUIRED;
     }
     currentContactsForm.valid = isValid;
     currentContactsForm.errors = errorMsg;
 }
-
-// === Обработчики событий ===
 
 events.on('card:select', (data: { id: string }) => showPreview(data.id));
 events.on('basket:open', renderBasket);
@@ -206,7 +189,8 @@ events.on('basket:order', () => {
 });
 
 events.on('order:paymentChange', (data: { payment: string }) => {
-    customer.saveData({ payment: data.payment as any });
+    const paymentType = data.payment as TPayment;
+    customer.saveData({ payment: paymentType });
     validateOrderForm();
 });
 
@@ -266,22 +250,11 @@ events.on('modal:close', () => page.locked = false);
 (async () => {
     try {
         const response = await comms.fetchProducts();
-        const productsWithFullPath = response.items.map(product => ({
-            ...product,
-            image: CDN_URL + product.image
-        }));
-        productsModel.setAllProducts(productsWithFullPath);
+        productsModel.setAllProducts(response.items);
         renderCatalog();
     } catch (err) {
-        console.warn('Используем моковые данные');
         const { apiProducts } = await import('./utils/data');
-        const fixedProducts = await Promise.all(apiProducts.items.map(async (product) => {
-            const imageName = product.image.replace(/^\//, '');
-            const imageUrl = new URL(`../images/${imageName}`, import.meta.url).href;
-            return { ...product, image: imageUrl };
-        }));
-        
-        productsModel.setAllProducts(fixedProducts);
+        productsModel.setAllProducts(apiProducts.items);
         renderCatalog();
     }
 })();

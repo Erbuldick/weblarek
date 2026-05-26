@@ -1,10 +1,8 @@
 import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
-
-interface ISuccess {
-    total: number;
-}
+import { ISuccess } from '../../types';
+import { TEXT } from '../../utils/constants';
 
 export class Success extends Component<ISuccess> {
     protected _closeButton: HTMLButtonElement;
@@ -16,11 +14,11 @@ export class Success extends Component<ISuccess> {
         this._description = ensureElement<HTMLElement>('.order-success__description', container);
 
         this._closeButton.addEventListener('click', () => {
-        events.emit('success:close');
+            events.emit('success:close');
         });
     }
 
     set total(value: number) {
-        this._description.textContent = `Списано ${value} синапсов`;
+        this._description.textContent = `${TEXT.SUCCESS_DESCRIPTION_PREFIX} ${value} ${TEXT.PRICE_SUFFIX}`;
     }
 }

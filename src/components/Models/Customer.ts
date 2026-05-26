@@ -11,20 +11,20 @@ export class Customer {
     public validateData(): CustomerErrors {
         const errors: CustomerErrors = {};
 
-    if (!this.email) {
-        errors.email = "Email обязателен";
-    }
-    if (!this.phone) {
-        errors.phone = "Телефон обязателен";
-    }
-    if (!this.address) {
-        errors.address = "Адрес обязателен";
-    }
-    if (!this.payment) {
-        errors.payment = "Способ оплаты обязателен";
-    }
+        if (!this.email) {
+            errors.email = "Email обязателен";
+        }
+        if (!this.phone) {
+            errors.phone = "Телефон обязателен";
+        }
+        if (!this.address) {
+            errors.address = "Адрес обязателен";
+        }
+        if (!this.payment) {
+            errors.payment = "Способ оплаты обязателен";
+        }
 
-    return errors;
+        return errors;
     }
 
     public saveData(buyerData: Partial<IBuyer>): void {
@@ -43,11 +43,11 @@ export class Customer {
     }
 
     public getAllData(): IBuyer {
-    return {
-        email: this.email,
-        phone: this.phone,
-        address: this.address,
-        payment: this.payment,
+        return {
+            email: this.email,
+            phone: this.phone,
+            address: this.address,
+            payment: this.payment,
         };
     }
 

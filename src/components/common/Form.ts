@@ -12,15 +12,15 @@ export abstract class Form<T> extends Component<T> {
         this._errors = ensureElement<HTMLElement>('.form__errors', container);
 
         container.addEventListener('input', (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        const field = target.name as keyof T;
-        const value = target.value;
-        this.onInputChange(field, value);
+            const target = e.target as HTMLInputElement;
+            const field = target.name as keyof T;
+            const value = target.value;
+            this.onInputChange(field, value);
         });
 
         container.addEventListener('submit', (e: Event) => {
-        e.preventDefault();
-        this.events.emit(`${container.name}:submit`);
+            e.preventDefault();
+            this.events.emit(`${container.name}:submit`);
         });
     }
 

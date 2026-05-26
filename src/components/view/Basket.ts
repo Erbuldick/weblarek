@@ -1,11 +1,8 @@
 import { ensureElement, createElement } from '../../utils/utils';
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
-
-interface IBasketView {
-    items: HTMLElement[];
-    total: number;
-}
+import { IBasketView } from '../../types';
+import { TEXT } from '../../utils/constants';
 
 export class Basket extends Component<IBasketView> {
     protected _list: HTMLElement;
@@ -23,15 +20,15 @@ export class Basket extends Component<IBasketView> {
 
     set items(items: HTMLElement[]) {
         if (items.length) {
-        this._list.replaceChildren(...items);
-        this._button.disabled = false;
+            this._list.replaceChildren(...items);
+            this._button.disabled = false;
         } else {
-        this._list.replaceChildren(createElement('p', { textContent: 'Корзина пуста' }));
-        this._button.disabled = true;
+            this._list.replaceChildren(createElement('p', { textContent: TEXT.BASKET_EMPTY }));
+            this._button.disabled = true;
         }
     }
 
     set total(value: number) {
-        this._total.textContent = `${value} синапсов`;
+        this._total.textContent = `${value} ${TEXT.BASKET_TOTAL_SUFFIX}`;
     }
 }

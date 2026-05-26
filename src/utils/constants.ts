@@ -16,7 +16,30 @@ export const categoryMap = {
   'другое': 'card__category_other',
 };
 
+export const TEXT = {
+  // Карточки
+  ADD_TO_CART: 'В корзину',
+  REMOVE_FROM_CART: 'Удалить из корзины',
+  UNAVAILABLE: 'Недоступно',
+  PRICELESS: 'Бесценно',
+  PRICE_SUFFIX: 'синапсов',
+  
+  // Корзина
+  BASKET_EMPTY: 'Корзина пуста',
+  BASKET_TOTAL_SUFFIX: 'синапсов',
+  
+  // Успешное оформление
+  SUCCESS_TITLE: 'Заказ оформлен',
+  SUCCESS_DESCRIPTION_PREFIX: 'Списано',
+  SUCCESS_BUTTON: 'За новыми покупками!',
+  
+  // Ошибки валидации
+  ERROR_ADDRESS_REQUIRED: 'Введите адрес доставки',
+  ERROR_PAYMENT_REQUIRED: 'Выберите способ оплаты',
+  ERROR_EMAIL_REQUIRED: 'Введите email',
+  ERROR_PHONE_REQUIRED: 'Введите телефон',
+};
+
 export const settings = {
 
 };
-

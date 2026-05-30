@@ -150,34 +150,37 @@ interface IBuyer {
 
 #### Класс ProductCatalog (каталог товаров)
 
-Хранение товаров, которые можно купить в приложении.
+Хранит список всех товаров, доступных в магазине, и оповещает об изменении каталога.
 
-Основные атрибуты:
-allProducts: IProduct[] - массив всех товаров в каталоге.
-selectedProduct: IProduct | null - объект выбранного в данный момент товара или null, если товар не выбран.
+Конструктор:
+constructor(events: IEvents) - принимает экземпляр брокера событий.
 
-Методы класса:
-getAllProducts(): IProduct[] - возвращает список всех товаров.
-saveProduct(product: IProduct): void - сохраняет (добавляет или обновляет) информацию о товаре.
-getSelectedProduct(): IProduct | null - получает информацию о выбранной карточке товара.
-setAllProducts(products: IProduct[]): void - сохраняет (полностью перезаписывает) массив данных товаров.
-getProductById(id: string): IProduct | undefined - получает один товар по его уникальному идентификатору (id). Возвращает undefined, если товар не найден.
+Поля:
+allProducts: IProduct[] - массив всех товаров.
+
+Методы:
+getAllProducts(): IProduct[] - возвращает список всех товаров.  
+setAllProducts(products: IProduct[]): void - полностью заменяет массив товаров и генерирует событие catalog:changed с данными { products: IProduct[] }.  
+getProductById(id: string): IProduct | undefined - возвращает товар по его идентификатору или undefined, если не найден.
 
 #### Класс Cart (корзина)
 
-Хранение товаров, которые пользователь выбрал для покупки.
+Хранит товары, добавленные пользователем, и оповещает об изменениях состава корзины.
 
-Основные атрибуты:
-items: IProduct[] - массив товаров, добавленных в корзину.
+Конструктор:
+constructor(events: IEvents) – принимает экземпляр брокера событий.
 
-Методы класса:
-getItems(): IProduct[] - возвращает список товаров в корзине.
-addItem(product: IProduct): void - добавляет товар в корзину.
-removeItem(productId: string): void - удаляет товар из корзины по его id.
-getItemCount(): number - возвращает общее количество товаров в корзине.
-getTotalPrice(): number - возвращает общую стоимость всех товаров в корзине.
-hasItem(productId: string): boolean - проверяет, есть ли товар с указанным id в корзине.
-clearCart(): void - очищает корзину (удаляет все товары).
+Поля:
+items: IProduct[] – массив товаров в корзине.
+
+Методы:
+getItems(): IProduct[] – возвращает список товаров.  
+addItem(product: IProduct): void – добавляет товар, если его ещё нет в корзине, генерирует событие cart:changed с данными { items: IProduct[] }.  
+removeItem(productId: string): void – удаляет товар по id, генерирует cart:changed.  
+getItemCount(): number – возвращает количество товаров.  
+getTotalPrice(): number – возвращает общую стоимость (цена null считается как 0).  
+hasItem(productId: string): boolean – проверяет наличие товара.  
+clearCart(): void – очищает корзину, генерирует cart:changed.
 
 #### Класс Customer (покупатель)
 
@@ -205,21 +208,30 @@ sendOrder(orderData: IOrderData) - POST-запрос на /order/, отправ�
 
 ## Компоненты представления (View)
 
-#### Класс Page
-Управляет основными элементами главной страницы: счётчиком корзины, галереей товаров и блокировкой прокрутки при открытом модальном окне.
+#### Класс Header
+Управляет хедером страницы: отображает счётчик корзины и кнопку открытия корзины.
 
-Конструктор:  
-constructor(container: HTMLElement, events: IEvents) – принимает корневой элемент страницы и брокер событий.
+Конструктор:
+constructor(container: HTMLElement, events: IEvents)
+
+Поля: 
+_counter: HTMLElement
+_basketButton: HTMLElement
+
+Сеттер: 
+counter(value: number) – обновляет текст счётчика.
+
+#### Класс Gallery
+Отображает галерею товаров на главной странице.
+
+Конструктор:
+constructor(container: HTMLElement)
 
 Поля:
-_counter: HTMLElement – элемент счётчика корзины.  
-_gallery: HTMLElement – контейнер галереи.  
-_basketButton: HTMLElement – кнопка открытия корзины.
+_container: HTMLElement
 
-Методы (сеттеры): 
-counter(value: number) – обновляет текст счётчика.  
-catalog(items: HTMLElement[]) – заменяет содержимое галереи.  
-locked(value: boolean) – добавляет/удаляет класс modal-open у body, блокируя прокрутку.
+Сеттер:
+items(items: HTMLElement[]) – заменяет содержимое галереи.
 
 #### Класс Modal
 Реализует модальное окно с возможностью закрытия по клику на оверлей или крестик.
@@ -289,31 +301,33 @@ _phoneInput: HTMLInputElement – поле телефона.
 email: string – читает/записывает email.  
 phone: string – читает/записывает телефон.
 
-#### Класс Card
-Отображает карточку товара в разных контекстах: в каталоге, в превью (модальное окно), в корзине.
+#### Класс CatalogCard
+Карточка товара в каталоге.
 
-Назначение: Универсальный компонент для показа информации о товаре и обработки кликов.
+Конструктор:
+constructor(container: HTMLElement, actions?: ICardActions)
 
-Конструктор:  
-constructor(container: HTMLElement, type: CardType, events: IEvents, actions?: ICardActions) – принимает DOM-элемент, тип карточки (catalog, preview, basket), брокер событий и опциональные действия.
+Сеттеры:
+title, price, image, category.
 
-Поля (в зависимости от типа): 
-_title: HTMLElement – заголовок.  
-_price: HTMLElement – цена.  
-_image?: HTMLImageElement – изображение (для catalog/preview).  
-_category?: HTMLElement – категория (для catalog/preview).  
-_description?: HTMLElement – описание (для preview).  
-_button?: HTMLButtonElement – кнопка (для preview/basket).  
-_index?: HTMLElement – номер позиции в корзине (для basket).
+#### Класс PreviewCard
+Карточка товара в модальном окне.
 
-Сеттеры:  
-title(value: string) – устанавливает текст заголовка.  
-price(value: number | null) – форматирует цену (если null – «Бесценно»), при необходимости блокирует кнопку.  
-image(value: string) – устанавливает src изображения.  
-category(value: string) – устанавливает текст категории и CSS-класс в соответствии с картой категорий.  
-description(value: string) – устанавливает описание.  
-index(value: number) – устанавливает номер в корзине.  
-buttonText(value: string) – изменяет текст кнопки.
+Конструктор:
+constructor(container: HTMLElement, actions?: ICardActions)
+
+Сеттеры:
+title, price, image, category, description, buttonText.
+
+#### Класс BasketCard
+
+Карточка товара в корзине.
+
+Конструктор:
+constructor(container: HTMLElement, actions?: ICardActions)
+
+Сеттеры:
+title, price, index.
 
 #### Класс Basket
 Отображает корзину: список товаров, общую сумму и кнопку оформления.
@@ -365,14 +379,27 @@ TEXT – объект со всеми строковыми литералами,
 
 ### Точка входа – main.ts
 Роль презентера. Здесь происходит:
-создание экземпляров всех моделей (ProductCatalog, Cart, Customer), коммуникационного слоя (CommunicationLayer), компонентов представления (Page, Modal, ...).
-подписка на события через events.on, связывающая действия пользователя с методами моделей и обновлением представления.
-загрузка товаров с сервера (или из моков) и первичный рендер каталога.
-реализована валидация форм, переход между шагами оформления заказа, отправка заказа на сервер и показ сообщения об успехе.
+создание экземпляров всех моделей (ProductCatalog, Cart, Customer);
+
+создание коммуникационного слоя (CommunicationLayer) для работы с API;
+
+однократное создание всех статических представлений:  
+Header, Gallery, Modal, Basket, OrderForm, ContactsForm, Success;
+
+динамическое создание карточек (CatalogCard, PreviewCard, BasketCard) при каждом рендере каталога или корзины;
+
+подписка на события через events.on:
+от моделей (например, catalog:changed, cart:changed) - вызов функций renderCatalog и renderBasket, которые обновляют представления через сеттеры;
+
+от представлений (например, basket:open, basket:removeItem, order:submit) - делегирование действий моделям или открытие модальных окон;
+
+загрузка товаров с сервера (или из моков) и первичный рендер каталога;
+
+реализация валидации форм, переключения между шагами оформления заказа, отправки заказа на сервер и показа окна успеха.
 
 ### UML-схема структуры классов
 В проекте не предусмотрена графическая UML-схема, однако описанная выше документация полностью отражает иерархию и связи классов. Ключевые связи:  
-Component<T> – базовый для всех классов представления (Page, Modal, Form, Card, Basket, Success).  
+Component<T> – базовый для всех классов представления (Header, Gallery, Modal, Form, CatalogCard, PreviewCard, BasketCard, Basket, Success).  
 Form<T> наследуется от Component и служит основой для OrderForm и ContactsForm.  
 Модели (ProductCatalog, Cart, Customer) не наследуются от Component и не зависят напрямую от представления.  
 Взаимодействие через EventEmitter обеспечивает слабую связанность.  

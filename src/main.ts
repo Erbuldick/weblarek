@@ -1,5 +1,5 @@
 import './scss/styles.scss';
-import { IProduct, TPayment } from './types';
+import { IProduct, TPayment, IBuyer } from './types';
 import { ProductCatalog } from './components/Models/ProductCatalog';
 import { Customer } from './components/Models/Customer';
 import { Cart } from './components/Models/Cart';
@@ -24,7 +24,7 @@ const api = new Api(API_URL);
 const comms = new CommunicationLayer(api);
 const productsModel = new ProductCatalog(events);
 const cart = new Cart(events);
-const customer = new Customer();
+const customer = new Customer(events);
 const header = new Header(document.body, events);
 const gallery = new Gallery(ensureElement('.gallery'));
 const modal = new Modal(ensureElement('#modal-container'), events);
@@ -83,19 +83,20 @@ function syncOrderForm() {
     const data = customer.getAllData();
     orderForm.address = data.address;
     orderForm.payment = data.payment;
-    // валидация
-    const isValid = !!data.address && !!data.payment;
-    orderForm.valid = isValid;
-    orderForm.errors = !data.address ? TEXT.ERROR_ADDRESS_REQUIRED : (!data.payment ? TEXT.ERROR_PAYMENT_REQUIRED : '');
+    const errors = customer.validateData();
+    const errorsText = [errors.address, errors.payment].filter(Boolean).join('; ');
+    orderForm.valid = errorsText.length === 0;
+    orderForm.errors = errorsText;
 }
 
 function syncContactsForm() {
     const data = customer.getAllData();
     contactsForm.email = data.email;
     contactsForm.phone = data.phone;
-    const isValid = !!data.email && !!data.phone;
-    contactsForm.valid = isValid;
-    contactsForm.errors = !data.email ? TEXT.ERROR_EMAIL_REQUIRED : (!data.phone ? TEXT.ERROR_PHONE_REQUIRED : '');
+    const errors = customer.validateData();
+    const errorsText = [errors.email, errors.phone].filter(Boolean).join('; ');
+    contactsForm.valid = errorsText.length === 0;
+    contactsForm.errors = errorsText;
 }
 
 events.on('catalog:changed', ({ products }: { products: IProduct[] }) => renderCatalog(products));
@@ -103,6 +104,7 @@ events.on('cart:changed', ({ items }: { items: IProduct[] }) => {
     renderBasket(items);
     updateHeaderCounter();
 });
+
 events.on('product:select', ({ id }: { id: string }) => {
     const product = productsModel.getProductById(id);
     if (!product) return;
@@ -131,39 +133,33 @@ events.on('product:select', ({ id }: { id: string }) => {
 events.on('basket:open', () => {
     openModal(basketContainer);
 });
+
 events.on('basket:removeItem', ({ id }: { id: string }) => {
     cart.removeItem(id);
 });
+
 events.on('basket:order', () => {
     if (cart.getItemCount() === 0) return;
     openModal(orderFormContainer);
     syncOrderForm();
 });
+
 events.on('order:paymentChange', ({ payment }: { payment: string }) => {
     customer.saveData({ payment: payment as TPayment });
-    syncOrderForm();
 });
-events.on('form:change', ({ field, value }: { field: string, value: string }) => {
-    if (field === 'address') {
-        customer.saveData({ address: value });
-        syncOrderForm();
-    } else if (field === 'email') {
-        customer.saveData({ email: value });
-        syncContactsForm();
-    } else if (field === 'phone') {
-        customer.saveData({ phone: value });
-        syncContactsForm();
-    }
+
+events.on('form:change', ({ field, value }: { field: keyof IBuyer, value: string }) => {
+    if (field === 'address') customer.saveData({ address: value });
+    else if (field === 'email') customer.saveData({ email: value });
+    else if (field === 'phone') customer.saveData({ phone: value });
 });
+
 events.on('order:submit', () => {
-    const errors = customer.validateData();
-    if (errors.address || errors.payment) return;
     openModal(contactsFormContainer);
     syncContactsForm();
 });
+
 events.on('contacts:submit', async () => {
-    const errors = customer.validateData();
-    if (errors.email || errors.phone) return;
     const orderData = {
         items: cart.getItems().map(p => p.id),
         total: cart.getTotalPrice(),
@@ -173,8 +169,6 @@ events.on('contacts:submit', async () => {
         const response = await comms.sendOrder(orderData);
         cart.clearCart();
         customer.clearCustomerData();
-        syncOrderForm();
-        syncContactsForm();
         successView.total = response.total;
         openModal(successContainer);
     } catch (err) {
@@ -182,6 +176,12 @@ events.on('contacts:submit', async () => {
         alert('Не удалось оформить заказ');
     }
 });
+
+events.on('customer:changed', () => {
+    syncOrderForm();
+    syncContactsForm();
+});
+
 events.on('success:close', () => closeModal());
 events.on('modal:open', () => document.body.classList.add('modal-open'));
 events.on('modal:close', () => document.body.classList.remove('modal-open'));

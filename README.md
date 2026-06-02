@@ -193,7 +193,7 @@ phone: string - номер телефона покупателя.
 address: string - адрес доставки.
 
 Методы класса:
-validateData(): boolean - проверяет корректность введенных данных покупателя.
+validateData(): CustomerErrors - возвращает объект с ошибками (поля: email, phone, address, payment).
 saveData(buyerData: IBuyer): void - сохраняет новые данные покупателя.
 getAllData(): IBuyer - получает все сохраненные данные покупателя.
 clearCustomerData(): void - очищает все данные, связанные с покупателем.
@@ -232,6 +232,15 @@ _container: HTMLElement
 
 Сеттер:
 items(items: HTMLElement[]) – заменяет содержимое галереи.
+
+#### Card<T> (абстрактный)
+Базовый класс для всех карточек товара. Содержит общие поля и логику.
+
+Конструктор: constructor(container: HTMLElement)
+
+Сеттеры:  
+title(value: string)  
+price(value: number | null) – форматирует цену, при null выводит «Бесценно».
 
 #### Класс Modal
 Реализует модальное окно с возможностью закрытия по клику на оверлей или крестик.
@@ -280,12 +289,9 @@ _cardButton: HTMLButtonElement – кнопка «Онлайн».
 _cashButton: HTMLButtonElement – кнопка «При получении».  
 _addressInput: HTMLInputElement – поле ввода адреса.
 
-Сеттеры/геттеры: 
+Сеттеры: 
 payment: TPayment – устанавливает визуально активную кнопку оплаты.  
 address: string – читает/записывает адрес.
-
-Методы: 
-private setPayment(type: TPayment) – устанавливает payment и генерирует событие order:paymentChange.
 
 #### Класс ContactsForm
 Форма второго шага оформления (email и телефон).
@@ -297,11 +303,11 @@ constructor(container: HTMLFormElement, events: IEvents) – вызывает к
 _emailInput: HTMLInputElement – поле email.  
 _phoneInput: HTMLInputElement – поле телефона.
 
-Геттеры/сеттеры:  
+Сеттеры:  
 email: string – читает/записывает email.  
 phone: string – читает/записывает телефон.
 
-#### Класс CatalogCard
+#### Класс CatalogCard extends Card<IProduct>
 Карточка товара в каталоге.
 
 Конструктор:
@@ -310,7 +316,7 @@ constructor(container: HTMLElement, actions?: ICardActions)
 Сеттеры:
 title, price, image, category.
 
-#### Класс PreviewCard
+#### Класс PreviewCard extends Card<IProduct>
 Карточка товара в модальном окне.
 
 Конструктор:
@@ -319,7 +325,7 @@ constructor(container: HTMLElement, actions?: ICardActions)
 Сеттеры:
 title, price, image, category, description, buttonText.
 
-#### Класс BasketCard
+#### Класс BasketCard extends Card<IProduct & { index: number }>
 
 Карточка товара в корзине.
 
@@ -399,8 +405,7 @@ Header, Gallery, Modal, Basket, OrderForm, ContactsForm, Success;
 
 ### UML-схема структуры классов
 В проекте не предусмотрена графическая UML-схема, однако описанная выше документация полностью отражает иерархию и связи классов. Ключевые связи:  
-Component<T> – базовый для всех классов представления (Header, Gallery, Modal, Form, CatalogCard, PreviewCard, BasketCard, Basket, Success).  
-Form<T> наследуется от Component и служит основой для OrderForm и ContactsForm.  
+Component<T> – базовый для всех классов представления. Card<T> (абстрактный) наследуется от Component, от него наследуются CatalogCard, PreviewCard, BasketCard. Form<T> (абстрактный) наследуется от Component, от него – OrderForm и ContactsForm. Остальные (Header, Gallery, Modal, Basket, Success) наследуются напрямую от Component.  
 Модели (ProductCatalog, Cart, Customer) не наследуются от Component и не зависят напрямую от представления.  
 Взаимодействие через EventEmitter обеспечивает слабую связанность.  
 CommunicationLayer использует композицию с Api.

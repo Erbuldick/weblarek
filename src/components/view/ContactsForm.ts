@@ -13,8 +13,11 @@ export class ContactsForm extends Form<IBuyer> {
         this._phoneInput = ensureElement<HTMLInputElement>('input[name=phone]', container);
     }
 
-    get email() { return this._emailInput.value; }
-    set email(value: string) { this._emailInput.value = value; }
-    get phone() { return this._phoneInput.value; }
-    set phone(value: string) { this._phoneInput.value = value; }
+    set email(value: string) {
+        this._emailInput.value = value;
+    }
+
+    set phone(value: string) {
+        this._phoneInput.value = value;
+    }
 }

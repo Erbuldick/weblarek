@@ -15,10 +15,10 @@ export class OrderForm extends Form<IBuyer> {
         this._addressInput = ensureElement<HTMLInputElement>('input[name=address]', container);
 
         this._cardButton.addEventListener('click', () => {
-            this.setPayment('online');
+            this.events.emit('order:paymentChange', { payment: 'online' });
         });
         this._cashButton.addEventListener('click', () => {
-            this.setPayment('on_delivery');
+            this.events.emit('order:paymentChange', { payment: 'on_delivery' });
         });
     }
 
@@ -35,16 +35,7 @@ export class OrderForm extends Form<IBuyer> {
         }
     }
 
-    get address(): string {
-        return this._addressInput.value;
-    }
-
     set address(value: string) {
         this._addressInput.value = value;
-    }
-
-    private setPayment(type: TPayment) {
-        this.payment = type;
-        this.events.emit('order:paymentChange', { payment: type });
     }
 }
